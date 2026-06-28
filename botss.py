@@ -12,8 +12,8 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     ChatPermissions
-)
-
+) 
+    
 from aiogram.enums import ChatMemberStatus
 
 import logging
@@ -23,11 +23,7 @@ TOKEN=os.getenv("BOT_TOKEN")
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
-users = set()
 
-@dp.message()
-async def save_users(message: Message):
-    users.add(message.from_user.id)
 
 # ================= БАЗА =================
 
