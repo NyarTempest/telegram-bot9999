@@ -15,6 +15,7 @@ from aiogram.types import (
 ) 
     
 from aiogram.enums import ChatMemberStatus
+from aiohttp import web
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -727,10 +728,25 @@ async def decline(callback: CallbackQuery):
     del requests[callback.from_user.id]
     # ================= ЗАПУСК =================
 
-async def main():
-    logging.info("Starting bot")
-    me=await bot.get_me(); logging.info(f"Logged in as {me.username}")
-    await dp.start_polling(bot)
+    async def health(request):
+    return web.Response(text="Bot is running")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+async def start_web():
+    app = web.Application()
+    app.router.add_get("/", health)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+
+    port = int(os.getenv("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    async def main():
+    logging.info("Starting bot")
+
+    await start_web()
+
+    me = await bot.get_me()
+    logging.info(f"Logged in as {me.username}")
+
+    await dp.start_polling(bot)
