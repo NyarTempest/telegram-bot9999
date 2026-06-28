@@ -728,8 +728,9 @@ async def decline(callback: CallbackQuery):
     del requests[callback.from_user.id]
     # ================= ЗАПУСК =================
 
-    async def health(request):
+async def health(request):
     return web.Response(text="Bot is running")
+
 
 async def start_web():
     app = web.Application()
@@ -741,7 +742,9 @@ async def start_web():
     port = int(os.getenv("PORT", 10000))
     site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
-    async def main():
+
+
+async def main():
     logging.info("Starting bot")
 
     await start_web()
@@ -750,3 +753,7 @@ async def start_web():
     logging.info(f"Logged in as {me.username}")
 
     await dp.start_polling(bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
