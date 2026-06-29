@@ -262,7 +262,7 @@ async def info_cmd(message: Message):
         0
     ) 
         
-        rose_count = roses.get(
+    rose_count = roses.get(
     str(user.id),
     0
     )
