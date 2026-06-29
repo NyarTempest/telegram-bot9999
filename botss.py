@@ -747,10 +747,10 @@ async def accept(callback: CallbackQuery):
 
     req = requests[callback.from_user.id]
 
-if req["action"] == "rose":
-    uid = str(callback.from_user.id)
-    roses[uid] = roses.get(uid, 0) + 1
-    save_db()
+    if req["action"] == "rose":
+        uid = str(callback.from_user.id)
+        roses[uid] = roses.get(uid, 0) + 1
+        save_db()
 
     actions = {
         "kiss": "💋 принял(а) поцелуй",
