@@ -63,11 +63,10 @@ def save_db():
         )
 
 
-ranks = database["ranks"]
-warns = database["warns"]
-gifts = database["gifts"]
-roses = database["roses"]
-
+ranks = database.setdefault("ranks", {})
+warns = database.setdefault("warns", {})
+gifts = database.setdefault("gifts", {})
+roses = database.setdefault("roses", {})
 gift_types = {
     "bear": "🧸 Мишка",
     "bunny": "🐰 Кролик",
