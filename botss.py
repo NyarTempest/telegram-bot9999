@@ -12,19 +12,22 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
     ChatPermissions
-) 
-    
+)
+
 from aiogram.enums import ChatMemberStatus
-from aiohttp import web
 
 import logging
 logging.basicConfig(level=logging.INFO)
-TOKEN= "8649868110:AAE28bh915SWKUWnobnobWXPBYHOPIoMI5U"
+TOKEN=os.getenv("TOKEN") or "8649868110:AAE28bh915SWKUWnobnobWXPBYHOPIoMI5U"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+users = set()
 
+@dp.message()
+async def save_users(message: Message):
+    users.add(message.from_user.id)
 
 # ================= БАЗА =================
 
@@ -43,6 +46,7 @@ def load_db():
         "ranks": {},
         "warns": {},
         "gifts": {}
+        "roses": {}
     }
 
 
@@ -62,6 +66,15 @@ def save_db():
 ranks = database["ranks"]
 warns = database["warns"]
 gifts = database["gifts"]
+roses = database["roses"]
+
+gift_types = {
+    "bear": "🧸 Мишка",
+    "bunny": "🐰 Кролик",
+    "heart": "❤️ Сердце",
+    "flowers": "💐 Букет",
+    "ring": "💍 Кольцо"
+}
 
 requests = {}
 
@@ -247,6 +260,10 @@ async def info_cmd(message: Message):
     gift_count = gifts.get(
         str(user.id),
         0
+        
+        rose_count = roses.get(
+    str(user.id),
+    0
     )
 
     text = (
@@ -263,10 +280,11 @@ async def info_cmd(message: Message):
     f"@{user.username if user.username else 'нет'}\n"
     "━━━━━━━━━━━━━━━━━━\n\n"
 
-    f"🏆 𝑹𝒂𝒏𝒌: {rank}\n"
-    f"⭐ Status: {member.status}\n"
-    f"⚠️ 𝑾𝒂𝒓𝒏𝒔: {warns_count}/3\n"
-    f"🎁 𝑮𝒊𝒇𝒕𝒔: {gift_count}\n\n"
+   f"🏆 𝑹𝒂𝒏𝒌: {rank}\n"
+f"⭐ Status: {member.status}\n"
+f"⚠️ 𝑾𝒂𝒓𝒏𝒔: {warns_count}/3\n"
+f"🌹 𝑹𝒐𝒔𝒆𝒔: {rose_count}\n"
+f"🎁 𝑮𝒊𝒇𝒕𝒔: {gift_count}\n\n"
 
     "━━━━━━━━━━━━━━━━━━\n"
     f"💬 Chat:\n{message.chat.title}\n"
@@ -666,6 +684,57 @@ async def bite(message: Message):
         "😈",
         "Укусить"
     )
+    
+ @dp.message(Command("gift"))
+async def gift(message: Message, command: CommandObject):
+
+    if not message.reply_to_message:
+        await message.answer(
+            "╔══════════════════════╗\n"
+            "        🎁 𝐆𝐈𝐅𝐓 🎁\n"
+            "╚══════════════════════╝\n\n"
+            "💝 Ответьте на сообщение человека,\n"
+            "которому хотите отправить подарок.\n\n"
+            "📌 Пример:\n"
+            "<code>/gift bear</code>",
+            parse_mode="HTML"
+        )
+        return
+
+    if not command.args:
+        await message.answer(
+            "╔══════════════════════╗\n"
+            "        🎁 𝐆𝐈𝐅𝐓 𝐒𝐇𝐎𝐏 🎁\n"
+            "╚══════════════════════╝\n\n"
+            "🧸 <b>bear</b> — Мишка\n"
+            "🐰 <b>bunny</b> — Кролик\n"
+            "❤️ <b>heart</b> — Сердце\n"
+            "💐 <b>flowers</b> — Букет\n"
+            "💍 <b>ring</b> — Кольцо\n\n"
+            "━━━━━━━━━━━━━━━━━━━\n"
+            "💡 Использование:\n"
+            "<code>/gift bear</code>",
+            parse_mode="HTML"
+        )
+        return
+
+    gift = command.args.lower()
+
+    if gift not in gift_types:
+        await message.answer(
+            "╔══════════════════════╗\n"
+            "       ❌ 𝐄𝐑𝐑𝐎𝐑 ❌\n"
+            "╚══════════════════════╝\n\n"
+            "Такого подарка не существует."
+        )
+        return
+
+    await create_request(
+        message,
+        f"gift_{gift}",
+        "🎁",
+        f"Подарить {gift_types[gift]}"
+    )
 
 
 # ================= ПРИНЯТЬ =================
@@ -677,6 +746,11 @@ async def accept(callback: CallbackQuery):
         return
 
     req = requests[callback.from_user.id]
+
+if req["action"] == "rose":
+    uid = str(callback.from_user.id)
+    roses[uid] = roses.get(uid, 0) + 1
+    save_db()
 
     actions = {
         "kiss": "💋 принял(а) поцелуй",
@@ -728,32 +802,10 @@ async def decline(callback: CallbackQuery):
     del requests[callback.from_user.id]
     # ================= ЗАПУСК =================
 
-async def health(request):
-    return web.Response(text="Bot is running")
-
-
-async def start_web():
-    app = web.Application()
-    app.router.add_get("/", health)
-
-    runner = web.AppRunner(app)
-    await runner.setup()
-
-    port = int(os.getenv("PORT", 10000))
-    site = web.TCPSite(runner, "0.0.0.0", port)
-    await site.start()
-
-
 async def main():
     logging.info("Starting bot")
-
-    await start_web()
-
-    me = await bot.get_me()
-    logging.info(f"Logged in as {me.username}")
-
+    me=await bot.get_me(); logging.info(f"Logged in as {me.username}")
     await dp.start_polling(bot)
-
 
 if __name__ == "__main__":
     asyncio.run(main())
