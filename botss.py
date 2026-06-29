@@ -685,8 +685,7 @@ async def bite(message: Message):
         "😈",
         "Укусить"
     )
-    
- @dp.message(Command("gift"))
+@dp.message(Command("gift"))
 async def gift(message: Message, command: CommandObject):
 
     if not message.reply_to_message:
