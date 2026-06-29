@@ -28,7 +28,8 @@ users = set()
 @dp.message()
 async def save_users(message: Message):
     users.add(message.from_user.id)
-    print(message.text)
+    import logging
+    logging.info(f"TEXT: {message.text}")
 
 # ================= БАЗА =================
 
