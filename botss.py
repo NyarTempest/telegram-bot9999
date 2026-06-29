@@ -106,6 +106,9 @@ async def is_admin(chat_id: int, user_id: int):
 
 @dp.message(Command("start"))
 async def start(message: Message):
+    print("START WORKED")
+    await message.answer("OK")
+
     await message.answer(
         "╔════════════════╗\n"
         " ✦ Romantic Bot ✦\n"
