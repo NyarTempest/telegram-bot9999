@@ -260,6 +260,7 @@ async def info_cmd(message: Message):
     gift_count = gifts.get(
         str(user.id),
         0
+    ) 
         
         rose_count = roses.get(
     str(user.id),
