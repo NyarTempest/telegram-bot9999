@@ -45,7 +45,7 @@ def load_db():
     return {
         "ranks": {},
         "warns": {},
-        "gifts": {}
+        "gifts": {}, 
         "roses": {}
     }
 
