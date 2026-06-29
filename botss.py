@@ -19,7 +19,7 @@ from aiohttp import web
 
 import logging
 logging.basicConfig(level=logging.INFO)
-TOKEN=os.getenv("BOT_TOKEN")
+TOKEN= "8695320022:AAGY2LyOWilNTFEljygNG6Qzy4Ynt0P4Z9k"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
