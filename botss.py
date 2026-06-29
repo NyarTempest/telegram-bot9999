@@ -18,7 +18,7 @@ from aiogram.enums import ChatMemberStatus
 
 import logging
 logging.basicConfig(level=logging.INFO)
-TOKEN=os.getenv("TOKEN") or "8985064599:AAHaINjPuMzJofMosY4RYQCwyTdMR-HAqlo"
+TOKEN=os.getenv("TOKEN") or "8783376787:AAHpfDKuHDoRXwYR0YY4kAi_M3xDs_vlR34"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
