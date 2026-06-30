@@ -5,5 +5,7 @@
     "users": {},
     "money": {},
     "rating": {},
-    "duels": {}
+    "duels": {}, 
+    "clans": {}, 
+    "clan_users": {}
 }
