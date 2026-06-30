@@ -96,17 +96,18 @@ def save_db():
     except Exception as e:
         logging.exception(e)
 
+db = load_db()
 
-ranks = database["ranks"]
-warns = database["warns"]
-gifts = database["gifts"]
-users = database["users"]
-money = database.setdefault("money", {})
-rating = database.setdefault("rating", {})
-duels = database.setdefault("duels", {})
-clans = database.setdefault("clans", {})
-clan_users = database.setdefault("clan_users", {})
-clan_wars = database.setdefault("clan_wars", {})
+ranks = db.get("ranks", {})
+warns = db.get("warns", {})
+gifts = db.get("gifts", {})
+users = db.get("users", {})
+money = db.get("money", {})
+rating = db.get("rating", {})
+
+duels = db.get("duels", {})
+clans = db.get("clans", {})
+clan_users = db.get("clan_users", {})
 clan_invites = db.get("clan_invites", {})
 
 
