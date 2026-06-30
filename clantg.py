@@ -46,7 +46,13 @@ DEFAULT_DATABASE = {
     "ranks": {},
     "warns": {},
     "gifts": {},
-    "users": {}
+    "users": {},
+    "money": {},
+    "rating": {},
+    "duels": {},
+    "clans": {},
+    "clan_users": {},
+    "clan_invites": {}
 }
 
 
@@ -101,6 +107,7 @@ duels = database.setdefault("duels", {})
 clans = database.setdefault("clans", {})
 clan_users = database.setdefault("clan_users", {})
 clan_wars = database.setdefault("clan_wars", {})
+clan_invites = db.get("clan_invites", {})
 
 
 # ================= РАНГИ =================
@@ -1705,6 +1712,198 @@ async def clanbank_cmd(message: Message):
 
         f"⭐ Уровень:\n"
         f"<b>{clans[clan]['level']}</b>"
+    )
+
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+
+@dp.message(Command("claninvite"))
+async def claninvite_cmd(message: Message):
+
+    uid = str(message.from_user.id)
+
+    if uid not in clan_users:
+        await safe_answer(
+            message,
+            "❌ Вы не состоите в клане."
+        )
+        return
+
+    clan = clan_users[uid]
+
+    if clans[clan]["owner"] != uid:
+        await safe_answer(
+            message,
+            "❌ Только глава клана может приглашать."
+        )
+        return
+
+    if not message.reply_to_message:
+        await safe_answer(
+            message,
+            "❌ Ответьте на сообщение игрока."
+        )
+        return
+
+    user = message.reply_to_message.from_user
+    target = str(user.id)
+
+    if target in clan_users:
+        await safe_answer(
+            message,
+            "❌ Игрок уже состоит в клане."
+        )
+        return
+
+    clan_invites[target] = clan
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Принять",
+                    callback_data=f"clan_accept:{target}"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отказать",
+                    callback_data=f"clan_decline:{target}"
+                )
+            ]
+        ]
+    )
+
+    await safe_answer(
+        message,
+
+        "╔════════════════════╗\n"
+        "      ✦ 𝑪𝑳𝑨𝑵 ✦\n"
+        "╚════════════════════╝\n\n"
+
+        "━━━━━━━━━━━━━━━━━━\n"
+
+        f"🏰 𝑪𝒍𝒂𝒏:\n"
+        f"『 {clan} 』\n\n"
+
+        f"👤 𝑷𝒍𝒂𝒚𝒆𝒓:\n"
+        f"『 {user.full_name} 』\n\n"
+
+        "━━━━━━━━━━━━━━━━━━\n\n"
+
+        "📨 Приглашение отправлено.",
+
+        reply_markup=keyboard
+    )
+
+@dp.callback_query(F.data.startswith("clan_accept:"))
+async def clan_accept(callback: CallbackQuery):
+
+    user_id = callback.data.split(":")[1]
+
+    if str(callback.from_user.id) != user_id:
+        await callback.answer(
+            "❌ Не ваше приглашение.",
+            show_alert=True
+        )
+        return
+
+    if user_id not in clan_invites:
+        await callback.answer(
+            "❌ Приглашение недействительно.",
+            show_alert=True
+        )
+        return
+
+    clan = clan_invites.pop(user_id)
+
+    clans[clan]["members"].append(user_id)
+    clan_users[user_id] = clan
+
+    save_db()
+
+    await callback.message.edit_text(
+
+        "╔════════════════════╗\n"
+        "      ✦ 𝑪𝑳𝑨𝑵 ✦\n"
+        "╚════════════════════╝\n\n"
+
+        "━━━━━━━━━━━━━━━━━━\n"
+
+        f"👤 𝑷𝒍𝒂𝒚𝒆𝒓:\n"
+        f"『 {callback.from_user.full_name} 』\n\n"
+
+        f"🏰 𝑪𝒍𝒂𝒏:\n"
+        f"『 {clan} 』\n\n"
+
+        "━━━━━━━━━━━━━━━━━━\n\n"
+
+        "✅ 𝑺𝒕𝒂𝒕𝒖𝒔:\n"
+        "『 JOINED 』"
+    )
+
+@dp.callback_query(F.data.startswith("clan_decline:"))
+async def clan_decline(callback: CallbackQuery):
+
+    user_id = callback.data.split(":")[1]
+
+    if str(callback.from_user.id) != user_id:
+        await callback.answer(
+            "❌ Не ваше приглашение.",
+            show_alert=True
+        )
+        return
+
+    if user_id in clan_invites:
+        clan_invites.pop(user_id)
+
+    await callback.message.edit_text(
+
+        "╔════════════════════╗\n"
+        "      ✦ 𝑪𝑳𝑨𝑵 ✦\n"
+        "╚════════════════════╝\n\n"
+
+        "━━━━━━━━━━━━━━━━━━\n\n"
+
+        "❌ Приглашение отклонено.\n\n"
+
+        "━━━━━━━━━━━━━━━━━━\n\n"
+
+        "💔 𝑺𝒕𝒂𝒕𝒖𝒔:\n"
+        "『 DECLINED 』"
+    )
+
+@dp.message(Command("clanleave"))
+async def clanleave_cmd(message: Message):
+
+    uid = str(message.from_user.id)
+
+    if uid not in clan_users:
+        return
+
+    clan = clan_users[uid]
+
+    if clans[clan]["owner"] == uid:
+        await safe_answer(
+            message,
+            "❌ Глава не может выйти.\nИспользуйте /clandelete."
+        )
+        return
+
+    clans[clan]["members"].remove(uid)
+    del clan_users[uid]
+
+    save_db()
+
+    await safe_answer(
+        message,
+
+        "╔════════════════════╗\n"
+        "      ✦ 𝑪𝑳𝑨𝑵 ✦\n"
+        "╚════════════════════╝\n\n"
+
+        f"🏰 Клан:\n"
+        f"『 {clan} 』\n\n"
+
+        "❌ Вы покинули клан."
     )
     # ================= BAN / UNBAN =================
 
