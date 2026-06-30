@@ -2241,6 +2241,39 @@ async def vote_cmd(message: Message):
 
             f"Игрок исключён из бункера."
         )
+from aiogram.exceptions import TelegramBadRequest
+
+@dp.message()
+async def chat_filter(message: Message):
+
+    # ЛС разрешены
+    if message.chat.type == "private":
+        return
+
+    # Разрешённые группы
+    if message.chat.id in ALLOWED_GROUPS:
+        return
+
+    try:
+        await message.answer(
+            "╔════════════════════╗\n"
+            "      ✦ TECTAL YARD ✦\n"
+            "╚════════════════════╝\n\n"
+
+            "❌ Данный бот недоступен\n"
+            "в этой группе.\n\n"
+
+            "🔒 Бот работает только\n"
+            "в официальных сообществах.\n\n"
+
+            "📩 Для доступа:\n"
+            "@ClanAmokLeaf"
+        )
+    except TelegramBadRequest:
+        pass
+
+    return
+
     # ================= BAN / UNBAN =================
 
 def parse_time(text: str | None):
